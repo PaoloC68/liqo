@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package status
+package statuslocal
 
 import (
 	"context"
@@ -22,6 +22,7 @@ import (
 
 	"github.com/liqotech/liqo/pkg/liqoctl/install"
 	"github.com/liqotech/liqo/pkg/liqoctl/output"
+	"github.com/liqotech/liqo/pkg/liqoctl/status"
 	"github.com/liqotech/liqo/pkg/liqoctl/util"
 	"github.com/liqotech/liqo/pkg/utils"
 	"github.com/liqotech/liqo/pkg/utils/getters"
@@ -32,7 +33,7 @@ import (
 type LocalInfoChecker struct {
 	options          *Options
 	localInfoSection output.Section
-	collectionErrors []collectionError
+	collectionErrors []status.CollectionError
 	getReleaseValues func() (map[string]interface{}, error)
 }
 
@@ -60,6 +61,11 @@ func newLocalInfoCheckerTest(options *Options, helmValues map[string]interface{}
 			return helmValues, nil
 		},
 	}
+}
+
+// Silent implements the Check interface.
+func (lic *LocalInfoChecker) Silent() bool {
+	return false
 }
 
 // Collect implements the collect method of the Checker interface.
@@ -128,9 +134,9 @@ func (lic *LocalInfoChecker) Format() (string, error) {
 	} else {
 		for _, cerr := range lic.collectionErrors {
 			text += lic.options.Printer.Error.Sprintfln(lic.options.Printer.Paragraph.Sprintf("%s\t%s\t%s",
-				cerr.appName,
-				cerr.appType,
-				cerr.err))
+				cerr.AppName,
+				cerr.AppType,
+				cerr.Err))
 		}
 		text = strings.TrimRight(text, "\n")
 	}
@@ -145,5 +151,5 @@ func (lic *LocalInfoChecker) HasSucceeded() bool {
 // addCollectionError adds a collection error. A collection error is an error that happens while
 // collecting the status of a Liqo component.
 func (lic *LocalInfoChecker) addCollectionError(localInfoType, localInfoName string, err error) {
-	lic.collectionErrors = append(lic.collectionErrors, newCollectionError(localInfoType, localInfoName, err))
+	lic.collectionErrors = append(lic.collectionErrors, status.NewCollectionError(localInfoType, localInfoName, err))
 }

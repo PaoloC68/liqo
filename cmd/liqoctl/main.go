@@ -23,6 +23,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 
 	discoveryv1alpha1 "github.com/liqotech/liqo/apis/discovery/v1alpha1"
 	netv1alpha1 "github.com/liqotech/liqo/apis/net/v1alpha1"
@@ -36,6 +37,7 @@ func init() {
 	utilruntime.Must(netv1alpha1.AddToScheme(scheme.Scheme))
 	utilruntime.Must(offloadingv1alpha1.AddToScheme(scheme.Scheme))
 	utilruntime.Must(sharingv1alpha1.AddToScheme(scheme.Scheme))
+	utilruntime.Must(metricsv1beta1.AddToScheme(scheme.Scheme))
 }
 
 func main() {

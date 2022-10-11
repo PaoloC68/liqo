@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	discoveryv1alpha1 "github.com/liqotech/liqo/apis/discovery/v1alpha1"
@@ -31,6 +32,7 @@ import (
 	offloadingv1alpha1 "github.com/liqotech/liqo/apis/offloading/v1alpha1"
 	sharingv1alpha1 "github.com/liqotech/liqo/apis/sharing/v1alpha1"
 	"github.com/liqotech/liqo/pkg/consts"
+	"github.com/liqotech/liqo/pkg/discovery"
 	"github.com/liqotech/liqo/pkg/virtualKubelet"
 )
 
@@ -226,6 +228,17 @@ func ListVirtualNodes(ctx context.Context, cl client.Client) (corev1.NodeList, e
 	return virtualNodes, err
 }
 
+// ListOffloadedPodsByNode returns the list of pods offloaded from the given namespace and running on the given node.
+func ListOffloadedPodsByNode(ctx context.Context, cl client.Client, namespace, nodeName string) (corev1.PodList, error) {
+	var offloadedPods corev1.PodList
+	err := cl.List(ctx, &offloadedPods, client.InNamespace(namespace), client.MatchingLabels{
+		consts.LocalPodLabelKey: consts.LocalPodLabelValue,
+	}, client.MatchingFields{
+		"spec.nodeName": nodeName,
+	})
+	return offloadedPods, err
+}
+
 // GetTunnelEndpoint retrieves the tunnelEndpoint resource related to a cluster.
 func GetTunnelEndpoint(ctx context.Context, cl client.Client,
 	destinationClusterIdentity *discoveryv1alpha1.ClusterIdentity, namespace string) (*netv1alpha1.TunnelEndpoint, error) {
@@ -247,4 +260,76 @@ func GetTunnelEndpoint(ctx context.Context, cl client.Client,
 		return nil, fmt.Errorf("multiple resources of type tunnelendpoint found for cluster %q (ID: %s)"+
 			" when only one was expected", destinationClusterIdentity.ClusterName, destinationClusterIdentity.ClusterID)
 	}
+}
+
+// GetNetworkConfigsByLabel it returns a NetworkConfig list that matches the given label selector.
+func GetNetworkConfigsByLabel(ctx context.Context, cl client.Client, ns string, lSelector labels.Selector) (*netv1alpha1.NetworkConfigList, error) {
+	list := new(netv1alpha1.NetworkConfigList)
+	if err := cl.List(ctx, list, &client.ListOptions{LabelSelector: lSelector}, client.InNamespace(ns)); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// GetTunnelEndpointsByLabel it returns a TunnelEndpoint list that matches the given label selector.
+func GetTunnelEndpointsByLabel(ctx context.Context, cl client.Client, lSelector labels.Selector) (*netv1alpha1.TunnelEndpointList, error) {
+	list := new(netv1alpha1.TunnelEndpointList)
+	if err := cl.List(ctx, list, &client.ListOptions{LabelSelector: lSelector}); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// GetForeignClustersByLabel it returns a ForeignCluster list that matches the given label selector.
+func GetForeignClustersByLabel(ctx context.Context, cl client.Client, lSelector labels.Selector) (*discoveryv1alpha1.ForeignClusterList, error) {
+	list := new(discoveryv1alpha1.ForeignClusterList)
+	if err := cl.List(ctx, list, &client.ListOptions{LabelSelector: lSelector}); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// GetForeignClusterByLabel it returns a ForeignCluster list that matches the given label selector.
+func GetForeignClusterByLabel(ctx context.Context, cl client.Client, lSelector labels.Selector) (*discoveryv1alpha1.ForeignCluster, error) {
+	list, err := GetForeignClustersByLabel(ctx, cl, lSelector)
+	switch len(list.Items) {
+	case 0:
+		return nil, kerrors.NewNotFound(discoveryv1alpha1.ForeignClusterGroupResource, fmt.Sprintf("foreign cluster with label %s", lSelector))
+	case 1:
+		return &list.Items[0], err
+	default:
+		return nil, fmt.Errorf("multiple resources of type foreigncluster found when only one was expected")
+	}
+}
+
+// GetForeignClusterByClusterID it returns a ForeignCluster list that matches the given clusterID.
+func GetForeignClusterByClusterID(ctx context.Context, cl client.Client, clusterID string) (*discoveryv1alpha1.ForeignCluster, error) {
+	return GetForeignClusterByLabel(ctx, cl, labels.SelectorFromSet(map[string]string{discovery.ClusterIDLabel: clusterID}))
+}
+
+// GetPodMetricsByLabel it returns a PodMetrics list that matches the given label selector.
+func GetPodMetricsByLabel(ctx context.Context, cl client.Client, lSelector labels.Selector) (*metricsv1beta1.PodMetricsList, error) {
+	list := new(metricsv1beta1.PodMetricsList)
+	if err := cl.List(ctx, list, &client.ListOptions{LabelSelector: lSelector}); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// GetPodMetricsByField it returns a PodMetrics list that matches the given fields selector.
+func GetPodMetricsByField(ctx context.Context, cl client.Client, fSelector fields.Selector) (*metricsv1beta1.PodMetricsList, error) {
+	list := new(metricsv1beta1.PodMetricsList)
+	if err := cl.List(ctx, list, &client.ListOptions{FieldSelector: fSelector}); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// GetPVCByLabel it returns a PersistentVolumeClaim list that matches the given label selector.
+func GetPVCByLabel(ctx context.Context, cl client.Client, lSelector labels.Selector) (*corev1.PersistentVolumeClaimList, error) {
+	list := new(corev1.PersistentVolumeClaimList)
+	if err := cl.List(ctx, list, &client.ListOptions{LabelSelector: lSelector}); err != nil {
+		return nil, err
+	}
+	return list, nil
 }

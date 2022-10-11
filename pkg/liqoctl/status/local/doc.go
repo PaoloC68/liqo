@@ -12,16 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package status
-
-import "context"
-
-// Checker an interface required to be implemented by all the checkers that
-// collect the status of Liqo.
-type Checker interface {
-	Collect(ctx context.Context) error
-	Format() (string, error)
-	GetTitle() string
-	HasSucceeded() bool
-	Silent() bool
-}
+// Package statuslocal contains the logic that handles the status local command in liqoctl
+package statuslocal

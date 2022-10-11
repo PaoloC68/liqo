@@ -12,16 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package status
+package statuslocal
 
-import "context"
+import (
+	"testing"
 
-// Checker an interface required to be implemented by all the checkers that
-// collect the status of Liqo.
-type Checker interface {
-	Collect(ctx context.Context) error
-	Format() (string, error)
-	GetTitle() string
-	HasSucceeded() bool
-	Silent() bool
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"github.com/pterm/pterm"
+	"k8s.io/client-go/kubernetes/scheme"
+
+	netv1alpha1 "github.com/liqotech/liqo/apis/net/v1alpha1"
+)
+
+func TestStatus(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Local Status Suite")
 }
+
+var _ = BeforeSuite(func() {
+	_ = netv1alpha1.AddToScheme(scheme.Scheme)
+	pterm.DisableStyling()
+})

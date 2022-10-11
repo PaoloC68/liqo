@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	nsChecker     namespaceChecker
+	nsChecker     NamespaceChecker
 	ctx           context.Context
 	namespaceName string
 	namespace     *corev1.Namespace
@@ -54,14 +54,14 @@ var _ = Describe("Namespace", func() {
 		})
 
 		JustBeforeEach(func() {
-			nsChecker = namespaceChecker{
+			nsChecker = NamespaceChecker{
 				options: options,
 			}
 		})
 
 		Describe("creating a new namespaceChecker", func() {
 			It("should hold the parameters passed during the creation", func() {
-				nc := newNamespaceChecker(options)
+				nc := NewNamespaceChecker(options, false)
 				Expect(nc.options.LiqoNamespace).To(Equal(namespaceName))
 				Expect(nc.failureReason).To(BeNil())
 				Expect(nc.succeeded).To(BeFalse())

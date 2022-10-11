@@ -53,7 +53,7 @@ var _ = Describe("reflector methods", func() {
 
 					virtualPvc, err := k8sClient.CoreV1().PersistentVolumeClaims(LocalNamespace).Get(ctx, remotePvcName2, metav1.GetOptions{})
 					Expect(err).ToNot(HaveOccurred())
-					_, found := virtualPvc.Annotations[annSelectedNode]
+					_, found := virtualPvc.Annotations[AnnSelectedNode]
 					Expect(found).To(BeFalse())
 				})
 			})

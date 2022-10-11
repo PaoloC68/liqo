@@ -155,8 +155,8 @@ var _ = BeforeEach(func() {
 			Name:      localPvcName,
 			Namespace: LocalNamespace,
 			Annotations: map[string]string{
-				annStorageProvisioner: consts.StorageProvisionerName,
-				annSelectedNode:       RealNodeName,
+				AnnStorageProvisioner: consts.StorageProvisionerName,
+				AnnSelectedNode:       RealNodeName,
 			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
@@ -177,8 +177,8 @@ var _ = BeforeEach(func() {
 			Name:      remotePvcName,
 			Namespace: LocalNamespace,
 			Annotations: map[string]string{
-				annStorageProvisioner: consts.StorageProvisionerName,
-				annSelectedNode:       VirtualNodeName,
+				AnnStorageProvisioner: consts.StorageProvisionerName,
+				AnnSelectedNode:       VirtualNodeName,
 			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{

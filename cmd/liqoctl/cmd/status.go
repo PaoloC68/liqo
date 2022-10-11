@@ -23,9 +23,51 @@ import (
 	"github.com/liqotech/liqo/pkg/liqoctl/factory"
 	"github.com/liqotech/liqo/pkg/liqoctl/output"
 	"github.com/liqotech/liqo/pkg/liqoctl/status"
+	statuslocal "github.com/liqotech/liqo/pkg/liqoctl/status/local"
+	statuspeer "github.com/liqotech/liqo/pkg/liqoctl/status/peer"
 )
 
+// TODO change message
 const liqoctlStatusLongHelp = `Show the status of Liqo.
+
+The command performs a set of checks to verify the status of the Liqo control
+plane, its configuration, as well as the characteristics of the currently
+active peerings, and reports the outcome in a human-readable format.
+
+Examples:
+  $ {{ .Executable }} status
+or
+  $ {{ .Executable }} status --namespace liqo-system
+`
+
+// TODO change message
+const liqoctlStatusLocalLongHelp = `Show the status of Liqo.
+
+The command performs a set of checks to verify the status of the Liqo control
+plane, its configuration, as well as the characteristics of the currently
+active peerings, and reports the outcome in a human-readable format.
+
+Examples:
+  $ {{ .Executable }} status
+or
+  $ {{ .Executable }} status --namespace liqo-system
+`
+
+// TODO Change message
+const liqoctlStatusPeerLongHelp = `Show the status of Liqo.
+
+The command performs a set of checks to verify the status of the Liqo control
+plane, its configuration, as well as the characteristics of the currently
+active peerings, and reports the outcome in a human-readable format.
+
+Examples:
+  $ {{ .Executable }} status
+or
+  $ {{ .Executable }} status --namespace liqo-system
+`
+
+// TODO Change message
+const liqoctlStatusPeersLongHelp = `Show the status of Liqo.
 
 The command performs a set of checks to verify the status of the Liqo control
 plane, its configuration, as well as the characteristics of the currently
@@ -44,13 +86,50 @@ func newStatusCommand(ctx context.Context, f *factory.Factory) *cobra.Command {
 		Short: "Show the status of Liqo",
 		Long:  WithTemplate(liqoctlStatusLongHelp),
 		Args:  cobra.NoArgs,
+	}
+
+	f.AddLiqoNamespaceFlag(cmd.PersistentFlags())
+	f.Printer.CheckErr(cmd.RegisterFlagCompletionFunc(factory.FlagNamespace, completion.Namespaces(ctx, f, completion.NoLimit)))
+
+	cmd.PersistentFlags().BoolVar(&options.Verbose, "verbose", false, "Show more informations about the peering")
+
+	cmd.AddCommand(newStatusLocalCommand(ctx, &options))
+	cmd.AddCommand(newStatusPeerCommand(ctx, &options))
+
+	return cmd
+}
+
+func newStatusLocalCommand(ctx context.Context, statusOptions *status.Options) *cobra.Command {
+	options := statuslocal.Options{Options: statusOptions}
+	cmd := &cobra.Command{
+		Use:   "local",
+		Short: "Get information about local cluster",
+		Long:  WithTemplate(liqoctlStatusLocalLongHelp),
+		Args:  cobra.NoArgs,
 
 		Run: func(cmd *cobra.Command, args []string) {
 			output.ExitOnErr(options.Run(ctx))
 		},
 	}
 
-	f.AddLiqoNamespaceFlag(cmd.Flags())
-	f.Printer.CheckErr(cmd.RegisterFlagCompletionFunc(factory.FlagNamespace, completion.Namespaces(ctx, f, completion.NoLimit)))
+	return cmd
+}
+
+func newStatusPeerCommand(ctx context.Context, statusOptions *status.Options) *cobra.Command {
+	options := statuspeer.Options{Options: statusOptions}
+	cmd := &cobra.Command{
+		Use:               "peer",
+		Aliases:           []string{"peers"},
+		Short:             "Get information about a peered cluster",
+		Long:              WithTemplate(liqoctlStatusPeerLongHelp),
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: completion.ForeignClusters(ctx, options.Factory, completion.NoLimit),
+
+		Run: func(cmd *cobra.Command, args []string) {
+			options.RemoteClusterNames = args
+			output.ExitOnErr(options.Run(ctx))
+		},
+	}
+
 	return cmd
 }

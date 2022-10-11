@@ -53,7 +53,7 @@ var _ = Describe("controller methods", func() {
 				claim: &corev1.PersistentVolumeClaim{
 					ObjectMeta: metav1.ObjectMeta{
 						Annotations: map[string]string{
-							annStorageProvisioner: "other-provisioner",
+							AnnStorageProvisioner: "other-provisioner",
 						},
 					},
 					Spec: corev1.PersistentVolumeClaimSpec{},
@@ -65,7 +65,7 @@ var _ = Describe("controller methods", func() {
 				claim: &corev1.PersistentVolumeClaim{
 					ObjectMeta: metav1.ObjectMeta{
 						Annotations: map[string]string{
-							annStorageProvisioner: consts.StorageProvisionerName,
+							AnnStorageProvisioner: consts.StorageProvisionerName,
 						},
 					},
 					Spec: corev1.PersistentVolumeClaimSpec{
@@ -79,8 +79,8 @@ var _ = Describe("controller methods", func() {
 				claim: &corev1.PersistentVolumeClaim{
 					ObjectMeta: metav1.ObjectMeta{
 						Annotations: map[string]string{
-							annStorageProvisioner: consts.StorageProvisionerName,
-							annSelectedNode:       "node-1",
+							AnnStorageProvisioner: consts.StorageProvisionerName,
+							AnnSelectedNode:       "node-1",
 						},
 					},
 					Spec: corev1.PersistentVolumeClaimSpec{

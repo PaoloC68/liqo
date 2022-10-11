@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package status
+package statuspeer
 
-import "context"
+import (
+	"context"
 
-// Checker an interface required to be implemented by all the checkers that
-// collect the status of Liqo.
-type Checker interface {
-	Collect(ctx context.Context) error
-	Format() (string, error)
-	GetTitle() string
-	HasSucceeded() bool
-	Silent() bool
+	"github.com/liqotech/liqo/pkg/liqoctl/status"
+)
+
+// Options encapsulates the arguments of the status command.
+type Options struct {
+	*status.Options
+	RemoteClusterNames []string
+}
+
+// Run implements the logic of the status command.
+func (o *Options) Run(ctx context.Context) error {
+	collector := newK8sStatusPeerCollector(o)
+	return collector.collectStatusPeer(ctx)
 }

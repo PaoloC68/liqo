@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package status
+package statuslocal
 
 import (
 	"context"
@@ -26,6 +26,7 @@ import (
 
 	"github.com/liqotech/liqo/pkg/liqoctl/factory"
 	"github.com/liqotech/liqo/pkg/liqoctl/output"
+	"github.com/liqotech/liqo/pkg/liqoctl/status"
 	"github.com/liqotech/liqo/pkg/utils/testutil"
 )
 
@@ -52,7 +53,11 @@ var _ = Describe("LocalInfo", func() {
 			testutil.FakeClusterIDConfigMap(namespace, clusterID, clusterName),
 			testutil.FakeIPAM(namespace),
 		)
-		options = Options{Factory: factory.NewForLocal()}
+		options = Options{
+			Options: &status.Options{
+				Factory: factory.NewForLocal(),
+			},
+		}
 		options.Printer = output.NewFakePrinter(GinkgoWriter)
 		options.CRClient = clientBuilder.Build()
 	})

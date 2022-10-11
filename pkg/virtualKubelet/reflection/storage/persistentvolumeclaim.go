@@ -162,7 +162,7 @@ func (npvcr *NamespacedPersistentVolumeClaimReflector) Handle(ctx context.Contex
 		npvcr.Event(local, corev1.EventTypeWarning, "ReschedulingRequired", msg)
 		// The provisioner may remove
 		// annSelectedNode to notify scheduler to reschedule again.
-		delete(local.Annotations, annSelectedNode)
+		delete(local.Annotations, AnnSelectedNode)
 		_, err := npvcr.localPersistentVolumeClaimsClient.Update(ctx, local, metav1.UpdateOptions{})
 		return err
 	}

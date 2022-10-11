@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package status
+// Package fields contain field selectors used throughout the liqo code in order to get
+// k8s resources.
+package fields
 
-import "context"
+import (
+	"k8s.io/apimachinery/pkg/fields"
+)
 
-// Checker an interface required to be implemented by all the checkers that
-// collect the status of Liqo.
-type Checker interface {
-	Collect(ctx context.Context) error
-	Format() (string, error)
-	GetTitle() string
-	HasSucceeded() bool
-	Silent() bool
+// NameAndNamespaceFieldSelector returns a field selector to match a resource by name and namespace.
+func NameAndNamespaceFieldSelector(name, namespace string) fields.Selector {
+	fs := fields.Set{}
+	fs["metadata.name"] = name
+	fs["metadata.namespace"] = namespace
+	return fields.SelectorFromSet(fs)
 }

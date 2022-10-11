@@ -44,10 +44,10 @@ var _ = Describe("Pods", func() {
 
 		Context("creating a new collectionError", func() {
 			It("should hold the passed parameters during the creation", func() {
-				ce := newCollectionError(appType, appName, err)
-				Expect(ce.appType).To(Equal(appType))
-				Expect(ce.appName).To(Equal(appName))
-				Expect(ce.err).To(MatchError(err))
+				ce := NewCollectionError(appType, appName, err)
+				Expect(ce.AppType).To(Equal(appType))
+				Expect(ce.AppName).To(Equal(appName))
+				Expect(ce.Err).To(MatchError(err))
 			})
 		})
 	})
@@ -166,7 +166,7 @@ var _ = Describe("Pods", func() {
 			pod           *v1.Pod
 			deployment    *appsv1.Deployment
 			daemonSet     *appsv1.DaemonSet
-			podC          podChecker
+			podC          PodChecker
 			ctx           = context.Background()
 			namespace     = "namespaceTest"
 			deploymentApp = "deploymentTest"
@@ -231,7 +231,7 @@ var _ = Describe("Pods", func() {
 			}
 		})
 		JustBeforeEach(func() {
-			podC = podChecker{
+			podC = PodChecker{
 				deployments:      deployments,
 				daemonSets:       daemonSets,
 				podsState:        make(podStateMap, 2),
@@ -243,7 +243,7 @@ var _ = Describe("Pods", func() {
 
 		Describe("creating a new podChecker", func() {
 			It("should hold the passed parameters during the creation", func() {
-				pc := newPodChecker(options, deployments, daemonSets)
+				pc := NewPodChecker(options, deployments, daemonSets)
 				Expect(pc.daemonSets).To(Equal(daemonSets))
 				Expect(pc.deployments).To(Equal(deployments))
 				Expect(pc.errors).To(BeFalse())

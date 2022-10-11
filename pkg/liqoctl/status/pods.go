@@ -33,7 +33,8 @@ const (
 )
 
 var (
-	liqoDeployments = []string{
+	// LiqoDeployments contains the list of Liqo deployments.
+	LiqoDeployments = []string{
 		"liqo-controller-manager",
 		"liqo-network-manager",
 		"liqo-crd-replicator",
@@ -42,7 +43,8 @@ var (
 		"liqo-auth",
 		"liqo-proxy",
 	}
-	liqoDaemonSets = []string{
+	// LiqoDaemonSets contains the list of Liqo DaemonSets.
+	LiqoDaemonSets = []string{
 		"liqo-route",
 	}
 )
@@ -52,19 +54,19 @@ type errorCount struct {
 	errors []error
 }
 
-// collectionError struct holding the error for a given deployment of Liqo while collecting its status.
-type collectionError struct {
-	appType string
-	appName string
-	err     error
+// CollectionError struct holding the error for a given deployment of Liqo while collecting its status.
+type CollectionError struct {
+	AppType string
+	AppName string
+	Err     error
 }
 
-// newCollectionError return a new collectionError with the given arguments set.
-func newCollectionError(appType, appName string, err error) collectionError {
-	return collectionError{
-		appType: appType,
-		appName: appName,
-		err:     err,
+// NewCollectionError return a new collectionError with the given arguments set.
+func NewCollectionError(appType, appName string, err error) CollectionError {
+	return CollectionError{
+		AppType: appType,
+		AppName: appName,
+		Err:     err,
 	}
 }
 
@@ -183,20 +185,20 @@ func (ps *componentState) format() string {
 	return strings.Join(outputTokens, ", ")
 }
 
-// podChecker implements the Check interface.
+// PodChecker implements the Check interface.
 // holds the information about the control plane pods of Liqo.
-type podChecker struct {
+type PodChecker struct {
 	options          *Options
 	deployments      []string
 	daemonSets       []string
 	podsState        podStateMap
 	errors           bool
-	collectionErrors []collectionError
+	collectionErrors []CollectionError
 }
 
-// newPodChecker return a new pod checker.
-func newPodChecker(options *Options, deployments, daemonSets []string) *podChecker {
-	return &podChecker{
+// NewPodChecker return a new pod checker.
+func NewPodChecker(options *Options, deployments, daemonSets []string) *PodChecker {
+	return &PodChecker{
 		options:     options,
 		deployments: deployments,
 		daemonSets:  daemonSets,
@@ -205,10 +207,15 @@ func newPodChecker(options *Options, deployments, daemonSets []string) *podCheck
 	}
 }
 
+// Silent implements the Check interface.
+func (pc *PodChecker) Silent() bool {
+	return false
+}
+
 // Collect implements the collect method of the Checker interface.
 // it collects the status of the components of Liqo. The status is
 // collected at the pod level.
-func (pc *podChecker) Collect(ctx context.Context) error {
+func (pc *PodChecker) Collect(ctx context.Context) error {
 	for _, dName := range pc.deployments {
 		err := pc.deploymentStatus(ctx, dName)
 		if err != nil {
@@ -230,19 +237,20 @@ func (pc *podChecker) Collect(ctx context.Context) error {
 	return nil
 }
 
-func (pc *podChecker) HasSucceeded() bool {
+// HasSucceeded implements the HasSucceeded method of the Checker interface.
+func (pc *PodChecker) HasSucceeded() bool {
 	return !pc.errors
 }
 
-// GetTitle implements the getTitle method of the Checker interface.
-func (pc *podChecker) GetTitle() string {
+// GetTitle implements the GetTitle method of the Checker interface.
+func (pc *PodChecker) GetTitle() string {
 	return ctrlPlaneCheckerName
 }
 
-// Format implements the format method of the Checker interface.
+// Format implements the Format method of the Checker interface.
 // it outputs the status of the Liqo components in a string ready to be
 // printed out.
-func (pc *podChecker) Format() (string, error) {
+func (pc *PodChecker) Format() (string, error) {
 	var text string
 	if pc.errors {
 		text += pc.options.Printer.Error.Sprintfln("%s liqo control plane is not OK", pterm.Red(output.Cross))
@@ -259,7 +267,7 @@ func (pc *podChecker) Format() (string, error) {
 			}
 		}
 		for _, err := range pc.collectionErrors {
-			text += pc.options.Printer.Error.Sprintln(pc.options.Printer.Paragraph.Sprintf("%s\t%s\t%s", err.appType, err.appName, err.err))
+			text += pc.options.Printer.Error.Sprintln(pc.options.Printer.Paragraph.Sprintf("%s\t%s\t%s", err.AppType, err.AppName, err.Err))
 		}
 		text = strings.TrimRight(text, "\n")
 		return text, fmt.Errorf("%s", text)
@@ -270,7 +278,7 @@ func (pc *podChecker) Format() (string, error) {
 }
 
 // deploymentStatus collects the status of a given kubernetes Deployment.
-func (pc *podChecker) deploymentStatus(ctx context.Context, deploymentName string) error {
+func (pc *PodChecker) deploymentStatus(ctx context.Context, deploymentName string) error {
 	var errors bool
 	d, err := pc.options.KubeClient.AppsV1().Deployments(pc.options.LiqoNamespace).Get(ctx, deploymentName, metav1.GetOptions{})
 
@@ -308,7 +316,7 @@ func (pc *podChecker) deploymentStatus(ctx context.Context, deploymentName strin
 }
 
 // daemontSetStatus collects the status of a given kubernetes DaemonSet.
-func (pc *podChecker) daemonSetStatus(ctx context.Context, daemonSetName string) error {
+func (pc *PodChecker) daemonSetStatus(ctx context.Context, daemonSetName string) error {
 	d, err := pc.options.KubeClient.AppsV1().DaemonSets(pc.options.LiqoNamespace).Get(ctx, daemonSetName, metav1.GetOptions{})
 
 	if err != nil {
@@ -346,8 +354,8 @@ func (pc *podChecker) daemonSetStatus(ctx context.Context, daemonSetName string)
 
 // addCollectionError adds a collection error. A collection error is an error that happens while
 // collecting the status of a Liqo component.
-func (pc *podChecker) addCollectionError(deploymentType, deploymenName string, err error) {
-	pc.collectionErrors = append(pc.collectionErrors, newCollectionError(deploymentType, deploymenName, err))
+func (pc *PodChecker) addCollectionError(deploymentType, deploymenName string, err error) {
+	pc.collectionErrors = append(pc.collectionErrors, NewCollectionError(deploymentType, deploymenName, err))
 }
 
 // checkPodsStatus fills the componentState data structure for a given pod.

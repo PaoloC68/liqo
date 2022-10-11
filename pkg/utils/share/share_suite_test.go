@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package status
+package share_test
 
-import "context"
+import (
+	"testing"
 
-// Checker an interface required to be implemented by all the checkers that
-// collect the status of Liqo.
-type Checker interface {
-	Collect(ctx context.Context) error
-	Format() (string, error)
-	GetTitle() string
-	HasSucceeded() bool
-	Silent() bool
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
+
+func TestPod(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Share Suite")
 }

@@ -15,18 +15,11 @@
 package status
 
 import (
-	"context"
-
 	"github.com/liqotech/liqo/pkg/liqoctl/factory"
 )
 
 // Options encapsulates the arguments of the status command.
 type Options struct {
 	*factory.Factory
-}
-
-// Run implements the logic of the status command.
-func (o *Options) Run(ctx context.Context) error {
-	collector := newK8sStatusCollector(o)
-	return collector.collectStatus(ctx)
+	Verbose bool
 }

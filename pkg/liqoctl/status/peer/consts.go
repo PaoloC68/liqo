@@ -12,16 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package status
+package statuspeer
 
-import "context"
-
-// Checker an interface required to be implemented by all the checkers that
-// collect the status of Liqo.
-type Checker interface {
-	Collect(ctx context.Context) error
-	Format() (string, error)
-	GetTitle() string
-	HasSucceeded() bool
-	Silent() bool
-}
+const (
+	// NotRemappedMsg contains the message printed when a cluster is not remapped.
+	NotRemappedMsg = "remapping not necessary"
+)

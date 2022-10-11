@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package status contains the logic that handles the status command in liqoctl
-package status
+// Package share contains utilities to get share resources quantities.
+package share

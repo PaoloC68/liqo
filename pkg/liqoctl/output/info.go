@@ -72,7 +72,7 @@ func (s *section) SprintForBox(printer *Printer) (string, error) {
 func (s *section) String() string {
 	if s.detail != "" {
 		return pterm.Sprintf(
-			"%s [%s]",
+			"%s - %s",
 			StatusSectionStyle.Sprint(s.title),
 			StatusInfoStyle.Sprint(s.detail),
 		)

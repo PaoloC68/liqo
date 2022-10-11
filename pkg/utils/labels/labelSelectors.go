@@ -25,6 +25,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 
 	liqoconst "github.com/liqotech/liqo/pkg/consts"
+	virtualkubeletconsts "github.com/liqotech/liqo/pkg/virtualKubelet/forge"
 )
 
 var (
@@ -136,6 +137,14 @@ func RemoteLabelSelectorForCluster(originClusterID string) labels.Selector {
 	utilruntime.Must(err)
 
 	return RemoteLabelSelector().Add(*req)
+}
+
+// LiqoOriginLabelSelector returns a label selector to match incoming resource with a given origin ClusterID.
+func LiqoOriginLabelSelector(originClusterID string) labels.Selector {
+	req, err := labels.NewRequirement(virtualkubeletconsts.LiqoOriginClusterIDKey, selection.Equals, []string{originClusterID})
+	utilruntime.Must(err)
+
+	return labels.NewSelector().Add(*req)
 }
 
 // ComponentLabelSelector returns the label selector associated with the component characterized by the given name and component labels.

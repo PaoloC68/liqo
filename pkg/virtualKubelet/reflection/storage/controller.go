@@ -30,8 +30,10 @@ import (
 )
 
 const (
-	annStorageProvisioner     = "volume.beta.kubernetes.io/storage-provisioner"
-	annSelectedNode           = "volume.kubernetes.io/selected-node"
+	// AnnStorageProvisioner is the annotation on PVCs that specifies what.
+	AnnStorageProvisioner = "volume.beta.kubernetes.io/storage-provisioner"
+	// AnnSelectedNode is the annotation of a PVC that specifies the node that.
+	AnnSelectedNode           = "volume.kubernetes.io/selected-node"
 	annAlphaSelectedNode      = "volume.alpha.kubernetes.io/selected-node"
 	annDynamicallyProvisioned = "pv.kubernetes.io/provisioned-by"
 )
@@ -53,7 +55,7 @@ func (npvcr *NamespacedPersistentVolumeClaimReflector) shouldProvision(claim *co
 		return false, nil
 	}
 
-	if provisioner, found := claim.Annotations[annStorageProvisioner]; found {
+	if provisioner, found := claim.Annotations[AnnStorageProvisioner]; found {
 		if npvcr.knownProvisioner(provisioner) {
 			claimClass := util.GetPersistentVolumeClaimClass(claim)
 			if claimClass != npvcr.virtualStorageClassName {
@@ -71,7 +73,7 @@ func (npvcr *NamespacedPersistentVolumeClaimReflector) shouldProvision(claim *co
 				// Though PV controller set annStorageProvisioner only when
 				// annSelectedNode is set, but provisioner may remove
 				// annSelectedNode to notify scheduler to reschedule again.
-				if selectedNode, ok := claim.Annotations[annSelectedNode]; ok && selectedNode != "" {
+				if selectedNode, ok := claim.Annotations[AnnSelectedNode]; ok && selectedNode != "" {
 					return true, nil
 				}
 				return false, nil
@@ -135,7 +137,7 @@ func (npvcr *NamespacedPersistentVolumeClaimReflector) provisionClaimOperation(c
 
 	var selectedNode *corev1.Node
 	// Get SelectedNode
-	if nodeName, ok := getString(claim.Annotations, annSelectedNode, annAlphaSelectedNode); ok {
+	if nodeName, ok := getString(claim.Annotations, AnnSelectedNode, annAlphaSelectedNode); ok {
 		selectedNode, err = npvcr.nodes.Get(nodeName)
 		if err != nil {
 			err = fmt.Errorf("failed to get target node: %w", err)
