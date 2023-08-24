@@ -25,6 +25,13 @@ RUN apk update && \
     apk add iptables bash wireguard-tools tcpdump conntrack-tools curl && \
     rm -rf /var/cache/apk/*
 
+# WIREGUARD_IMPLEMENTATION can be "kernel" or "userspace"
+ENV WIREGUARD_IMPLEMENTATION="kernel"
+# IPTABLES_MODE can be "legacy" or "nft"
+ENV IPTABLES_MODE="legacy"
+# the next line is needed to avoid errors when overriding iptables symlink
+RUN chmod 777 -R /sbin
+
 COPY --from=goBuilder /tmp/builder/liqonet /usr/bin/liqonet
 COPY --from=goBuilder-wg /go/wireguard-go/wireguard-go /usr/bin/wireguard-go
 

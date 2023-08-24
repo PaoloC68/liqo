@@ -17,6 +17,10 @@ package iptables
 import (
 	"encoding/csv"
 	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/coreos/go-iptables/iptables"
@@ -68,7 +72,83 @@ const (
 	ACCEPT = "ACCEPT"
 	// DROP action constant.
 	DROP = "DROP"
+	// envIPTablesMode is the environment variable used to set the iptables mode.
+	envIPTablesMode = "IPTABLES_MODE"
 )
+
+// Mode is the type used to set the iptables mode.
+type Mode string
+
+const (
+	// IPTablesModeLegacy is the legacy iptables mode.
+	IPTablesModeLegacy Mode = "legacy"
+	// IPTablesModeNFTables is the nftables mode.
+	IPTablesModeNFTables Mode = "nft"
+)
+
+func init() {
+	found, err := overrideIPTablesMode(os.Getenv(envIPTablesMode))
+	if err != nil {
+		klog.Fatal(err)
+	}
+	if !found {
+		klog.Fatal("iptables binary not found")
+	}
+	klog.Infof("iptables mode set to %s", os.Getenv(envIPTablesMode))
+}
+
+func overrideIPTablesMode(iptm string) (found bool, err error) {
+	found = false
+	err = filepath.WalkDir("/", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		// skip non iptables files or directories
+		if d.Name() != "iptables" || d.IsDir() {
+			return nil
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		// check if the file is a symlink
+		if isSymlink := (info.Mode() & fs.ModeSymlink) != 0; !isSymlink {
+			return nil
+		}
+		// get the target of the symlink
+		target, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			return err
+		}
+		// check if the symlink points to a xtables-multi binary
+		matched, err := regexp.MatchString(fmt.Sprintf(".*xtables-(%s|%s)-multi.*", IPTablesModeLegacy, IPTablesModeNFTables), target)
+		if err != nil {
+			return err
+		}
+		if !matched {
+			return fmt.Errorf("iptables symlink points to %s, which is not a xtables-multi binary", target)
+		}
+		found = true
+		// check if the symlink points to the correct xtables-multi binary. If not, replace it.
+		if strings.Contains(target, iptm) {
+			return filepath.SkipAll
+		}
+		switch iptm {
+		case string(IPTablesModeLegacy):
+			target = strings.ReplaceAll(target, string(IPTablesModeNFTables), string(IPTablesModeLegacy))
+		case string(IPTablesModeNFTables):
+			target = strings.ReplaceAll(target, string(IPTablesModeLegacy), string(IPTablesModeNFTables))
+		}
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+		if err := os.Symlink(target, path); err != nil {
+			return err
+		}
+		return filepath.SkipAll
+	})
+	return found, err
+}
 
 // IPTableRule is a slice of string. This is the format used by module go-iptables.
 type IPTableRule []string
@@ -123,10 +203,7 @@ func (h IPTHandler) Init() error {
 	liqoRules := getLiqoRules()
 
 	// Insert Liqo rules
-	if err := h.ensureLiqoRules(liqoRules); err != nil {
-		return err
-	}
-	return nil
+	return h.ensureLiqoRules(liqoRules)
 }
 
 // Function that creates default Liqo chains.
@@ -217,10 +294,7 @@ func (h IPTHandler) deleteLiqoChainsFromTable(liqoChains map[string]string, tabl
 		)
 	}
 	// Delete chains in table
-	if err := h.deleteChainsInTable(table, existingChains, chainsToBeRemoved); err != nil {
-		return err
-	}
-	return nil
+	return h.deleteChainsInTable(table, existingChains, chainsToBeRemoved)
 }
 
 // Function that deletes Liqo chains.
