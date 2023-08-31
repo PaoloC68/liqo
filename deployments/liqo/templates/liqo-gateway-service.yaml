@@ -1,5 +1,7 @@
 ---
 {{- $gatewayConfig := (merge (dict "name" "gateway" "module" "networking") .) -}}
+{{- $gatewayTcpConfig := (merge (dict "name" "gateway-tcp" "module" "networking") .) -}}
+{{- $gatewayMetricsConfig := (merge (dict "name" "gateway-metrics" "module" "networking") .) -}}
 
 {{- if .Values.networking.internal }}
 
@@ -34,7 +36,38 @@ spec:
     {{- include "liqo.gatewaySelector" $gatewayConfig | nindent 4 }}
 
 ---
-{{- $gatewayMetricsConfig := (merge (dict "name" "gateway-metrics" "module" "networking") .) -}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "liqo.prefixedName" $gatewayTcpConfig }}
+  annotations:
+    {{- if .Values.gateway.service.annotations }}
+    {{- toYaml .Values.gateway.service.annotations | nindent 4 }}
+    {{- end}}
+    {{- if .Values.gateway.config.addressOverride }}
+    liqo.io/override-address: {{ .Values.gateway.config.addressOverride | quote }}
+    {{- end }}
+    {{- if .Values.gateway.config.portOverride }}
+    liqo.io/override-port: {{ .Values.gateway.config.portOverride | quote }}
+    {{- end }}
+  labels:
+    {{- include "liqo.labels" $gatewayTcpConfig | nindent 4 }}
+    {{- include "liqo.gatewayServiceLabels" $gatewayTcpConfig | nindent 4 }}
+    {{- if .Values.gateway.service.labels }}
+      {{- toYaml .Values.gateway.service.labels | nindent 4 }}
+    {{- end}}
+spec:
+  type: {{ .Values.gateway.service.type }}
+  ports:
+    - name: udp2raw
+      port: 7777
+      targetPort: udp2raw
+      protocol: TCP
+  selector:
+    {{- include "liqo.gatewaySelector" $gatewayTcpConfig | nindent 4 }}
+
+---
 
 {{- if .Values.gateway.metrics.enabled }}
 apiVersion: v1

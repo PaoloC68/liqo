@@ -22,8 +22,12 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=$(go env GOARCH) go build -ldflags="-s -w" .
 FROM alpine:3.18
 
 RUN apk update && \
-    apk add iptables bash wireguard-tools tcpdump conntrack-tools curl && \
+    apk add iptables bash wireguard-tools tcpdump conntrack-tools curl wget && \
     rm -rf /var/cache/apk/*
+
+RUN wget https://github.com/wangyu-/udp2raw/releases/download/20230206.0/udp2raw_binaries.tar.gz
+RUN tar -xvf udp2raw_binaries.tar.gz
+RUN mv udp2raw_amd64 /usr/bin/udp2raw
 
 COPY --from=goBuilder /tmp/builder/liqonet /usr/bin/liqonet
 COPY --from=goBuilder-wg /go/wireguard-go/wireguard-go /usr/bin/wireguard-go

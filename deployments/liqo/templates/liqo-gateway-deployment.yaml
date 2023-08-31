@@ -37,6 +37,9 @@ spec:
           - name: wireguard
             containerPort: {{ .Values.gateway.config.listeningPort }}
             protocol: UDP
+          - name: udp2raw
+            containerPort: 7777
+            protocol: TCP
           {{- if .Values.gateway.metrics.enabled }}
           - name: metrics
             containerPort: {{ .Values.gateway.metrics.port }}

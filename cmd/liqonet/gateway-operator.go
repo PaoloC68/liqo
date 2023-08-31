@@ -64,11 +64,11 @@ func addGatewayOperatorFlags(liqonet *gatewayOperatorFlags) {
 		"mtu is the maximum transmission unit for interfaces managed by the gateway operator")
 	flag.UintVar(&liqonet.tunnelListeningPort, "gateway.listening-port", liqoconst.GatewayListeningPort,
 		"listening-port is the port used by the vpn tunnel")
-	flag.DurationVar(&liqonet.updateStatusInterval, "gateway.ping-latency-update-interval", 30*time.Second,
+	flag.DurationVar(&liqonet.updateStatusInterval, "gateway.ping-latency-update-interval", 120*time.Second,
 		"ping-latency-update-interval is the interval at which the gateway operator updates the latency value in the status of the tunnel-endpoint")
 	flag.UintVar(&conncheck.PingLossThreshold, "gateway.ping-loss-threshold", 5,
 		"ping-loss-threshold is the number of lost packets after which the connection check is considered as failed.")
-	flag.DurationVar(&conncheck.PingInterval, "gateway.ping-interval", 2*time.Second,
+	flag.DurationVar(&conncheck.PingInterval, "gateway.ping-interval", 10*time.Second,
 		"ping-interval is the interval between two connection checks")
 }
 

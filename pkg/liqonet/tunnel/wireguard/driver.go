@@ -164,6 +164,20 @@ func NewDriver(k8sClient k8s.Interface, namespace string, config tunnel.Config) 
 
 	klog.Infof("created %s interface named %s with publicKey %s", liqoconst.DriverName, liqoconst.DeviceName, w.conf.pubKey.String())
 
+	go func() {
+		out, err := exec.Command("/usr/bin/udp2raw", "-s",
+			"-l", "0.0.0.0:7777",
+			"-r", fmt.Sprintf("127.0.0.1:%d", config.ListeningPort),
+			"-a", "--auth-mode", "none", "--cipher-mode", "none", "--raw-mode", "faketcp").Output()
+
+		if err != nil {
+			output := string(out)
+			klog.Errorf("failed to run udp2raw: %s", output)
+			klog.Errorf("failed to run udp2raw: %s", err)
+			panic(err)
+		}
+	}()
+
 	return &w, nil
 }
 
@@ -245,6 +259,8 @@ func (w *Wireguard) ConnectToEndpoint(tep *netv1alpha1.TunnelEndpoint, updateSta
 		return nil, fmt.Errorf("unable to get the tunnel ip: %w", err)
 	}
 
+	endpoint.IP = net.IPv4(127, 0, 0, 1)
+	endpoint.Port = 3333
 	// configure peer.
 	peerCfg := []wgtypes.PeerConfig{{
 		PublicKey:         *remoteKey,
