@@ -22,7 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	k8shelper "k8s.io/component-helpers/scheduling/corev1"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/liqotech/liqo/internal/crdReplicator/reflection"
 	liqoconst "github.com/liqotech/liqo/pkg/consts"
 	"github.com/liqotech/liqo/pkg/utils/getters"
+	virtualnodeutils "github.com/liqotech/liqo/pkg/utils/virtualnode"
 )
 
 func (r *NamespaceOffloadingReconciler) enforceClusterSelector(ctx context.Context, nsoff *offv1alpha1.NamespaceOffloading,
@@ -49,7 +49,7 @@ func (r *NamespaceOffloadingReconciler) enforceClusterSelector(ctx context.Conte
 
 	var returnErr error
 	for i := range virtualNodes.Items {
-		match, err := matchVirtualNodeSelectorTerms(ctx, r.Client, &virtualNodes.Items[i], &nsoff.Spec.ClusterSelector)
+		match, err := virtualnodeutils.MatchSelectorTerms(&virtualNodes.Items[i], &nsoff.Spec.ClusterSelector)
 		if err != nil {
 			r.Recorder.Eventf(nsoff, corev1.EventTypeWarning, "Invalid", "Invalid ClusterSelector: %v", err)
 			// We end the processing here, as this error will be triggered for all the virtual nodes.
@@ -94,18 +94,4 @@ func (r *NamespaceOffloadingReconciler) getClusterIDMap(ctx context.Context) (ma
 		clusterIDMap[nms.Items[i].Labels[liqoconst.RemoteClusterID]] = &nms.Items[i]
 	}
 	return clusterIDMap, nil
-}
-
-func matchVirtualNodeSelectorTerms(ctx context.Context, cl client.Client, virtualNode *virtualkubeletv1alpha1.VirtualNode,
-	selector *corev1.NodeSelector) (bool, error) {
-	// Shortcircuit the matching logic, to always return a positive outcome in case no selector is specified.
-	if len(selector.NodeSelectorTerms) == 0 {
-		return true, nil
-	}
-
-	n, err := getters.GetNodeFromVirtualNode(ctx, cl, virtualNode)
-	if err != nil {
-		return false, fmt.Errorf("failed to retrieve node %s from VirtualNode %s: %w", n.Name, virtualNode.Name, err)
-	}
-	return k8shelper.MatchNodeSelectorTerms(n, selector)
 }
