@@ -227,9 +227,7 @@ func (w *Wireguard) ConnectToEndpoint(tep *netv1alpha1.TunnelEndpoint, updateSta
 	if found {
 		// check if the peer configuration is updated.
 		if stringAllowedIPs == oldCon.PeerConfiguration[liqoconst.WgAllowedIPs] &&
-			remoteKey.String() == oldCon.PeerConfiguration[liqoconst.PublicKey] &&
-			endpoint.IP.String() == oldCon.PeerConfiguration[liqoconst.WgEndpointIP] &&
-			strconv.Itoa(endpoint.Port) == oldCon.PeerConfiguration[liqoconst.ListeningPort] {
+			remoteKey.String() == oldCon.PeerConfiguration[liqoconst.PublicKey] {
 			// Update connection status.
 			return &tep.Status.Connection, nil
 		}
