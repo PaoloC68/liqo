@@ -58,7 +58,7 @@ type GatewayServerSpec struct {
 // EndpointStatus defines the observed state of the endpoint.
 type EndpointStatus struct {
 	// Addresses specifies the addresses of the endpoint.
-	Addresses []string `json:"addresses,omitempty"`
+	Addresses []IP `json:"addresses,omitempty"`
 	// Port specifies the port of the endpoint.
 	Port int32 `json:"port,omitempty"`
 	// Protocol specifies the protocol of the endpoint.

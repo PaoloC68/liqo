@@ -30,6 +30,7 @@ import (
 	"github.com/liqotech/liqo/internal/liqonet/network-manager/netcfgcreator"
 	"github.com/liqotech/liqo/internal/liqonet/network-manager/tunnelendpointcreator"
 	liqoconst "github.com/liqotech/liqo/pkg/consts"
+	configurationcontroller "github.com/liqotech/liqo/pkg/liqonet/configuration-controller"
 	liqonetIpam "github.com/liqotech/liqo/pkg/liqonet/ipam"
 	liqonetutils "github.com/liqotech/liqo/pkg/liqonet/utils"
 	"github.com/liqotech/liqo/pkg/utils/args"
@@ -109,6 +110,8 @@ func runNetworkManager(commonFlags *liqonetCommonFlags, managerFlags *networkMan
 		ExternalCIDR: externalCIDR,
 	}
 
+	cfgr := configurationcontroller.NewConfigurationReconciler(mgr.GetClient(), mgr.GetScheme(), mgr.GetEventRecorderFor("configuration-controller"))
+
 	if err = tec.SetupWithManager(mgr); err != nil {
 		klog.Errorf("unable to create controller TunnelEndpointCreator: %s", err)
 		os.Exit(1)
@@ -116,6 +119,11 @@ func runNetworkManager(commonFlags *liqonetCommonFlags, managerFlags *networkMan
 
 	if err = ncc.SetupWithManager(mgr); err != nil {
 		klog.Errorf("unable to create controller NetworkConfigCreator: %s", err)
+		os.Exit(1)
+	}
+
+	if err = cfgr.SetupWithManager(mgr); err != nil {
+		klog.Errorf("unable to create controller ConfigurationReconciler: %s", err)
 		os.Exit(1)
 	}
 

@@ -84,3 +84,12 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - networking.liqo.io
+  resources:
+  - configuration
+  verbs:
+  - get
+  - list
+  - update
+  - watch

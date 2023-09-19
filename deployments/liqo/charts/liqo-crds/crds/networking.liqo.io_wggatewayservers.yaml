@@ -8966,6 +8966,8 @@ spec:
                   addresses:
                     description: Addresses specifies the addresses of the endpoint.
                     items:
+                      description: IP defines a syntax validated IP.
+                      pattern: ^(([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])\.){3}([1-9]{0,1}[0-9]{0,2}|2[0-4][0-9]|25[0-5])$
                       type: string
                     type: array
                   port:
